@@ -77,7 +77,6 @@ if __name__=='__main__':
         loc, rot = camera_trajectory[idx]
         client.request('vset /camera/{id}/location {x} {y} {z}'.format(id=idx, **loc))
         client.request('vset /camera/{id}/rotation {pitch} {yaw} {roll}'.format(id=idx, **rot))
-
         # Get image
         res = client.request('vget /camera/{id}/lit {id}.png'.format(id=idx))
         print('The image is saved to %s' % res)
@@ -98,3 +97,7 @@ if __name__=='__main__':
             if bbox is not None:
                 id2bbox[obj_id] = bbox
     client.disconnect()
+
+
+
+    # TODO Trouver maniere la plus simple de sauvegarder annoations sous format xml
