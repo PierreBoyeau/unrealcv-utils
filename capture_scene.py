@@ -5,13 +5,17 @@ WARNING : objects refer to unreal IDs and not labels!
 
 
 from __future__ import division, absolute_import, print_function
-import os, sys, time, re, json
+import os, sys, re
 import numpy as np
-import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
 from unrealcv import client
+from pascal_voc_io import PascalVocWriter
 import argparse
 import json
+
+
+DIFFICULT = 0
+IMGSIZE = (512, 512, 3)
 
 parser = argparse.ArgumentParser(description='Generate images and xmls from Unreal Scene. The scene must be open in Unreal '
                                              'in order for this script to work')
@@ -53,12 +57,23 @@ def match_color(object_mask, target_color, tolerance=3):
     else:
         return None
 
+
 def get_id2color(scene_objects):
     id2color = {}  # Map from object id to the labeling color
     for obj_id in scene_objects:
         color = Color(client.request('vget /object/%s/color' % obj_id))
         id2color[obj_id] = color
     return id2color
+
+
+def write_VOC(id2bbox, id2category, filename, foldername='database', imgSize=IMGSIZE):
+    writer = PascalVocWriter(filename, foldername, imgSize)
+    ids = id2bbox.values()
+    for id in ids:
+        xmin, xmax, ymin, ymax = id2bbox[id]
+        name = id2category[id]
+        writer.addBndBox(xmin, ymin, xmax, ymax, name, DIFFICULT)
+    writer.save(foldername+'{}.xml'.format(filename))
 
 
 if __name__=='__main__':
@@ -71,6 +86,8 @@ if __name__=='__main__':
     print(res)
 
     camera_trajectory = json.load(open(args.trajectory))
+    with open('object_category.json') as f:
+        id2category = json.load(f)
 
     num_cameras = len(camera_trajectory)
     for idx in range(num_cameras):
@@ -96,8 +113,7 @@ if __name__=='__main__':
             bbox = match_color(object_mask, [color.R, color.G, color.B], tolerance=3)
             if bbox is not None:
                 id2bbox[obj_id] = bbox
+
+        write_VOC(id2bbox, id2category, idx)
     client.disconnect()
-
-
-
-    # TODO Trouver maniere la plus simple de sauvegarder annoations sous format xml
+    # TODO VERIFIER QUE TOUT FONCTIONNE MAINTENANT SUR QUE MARCHE PAS (imgSize)
