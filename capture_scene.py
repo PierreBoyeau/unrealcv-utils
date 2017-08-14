@@ -1,18 +1,18 @@
 """"
 Script that allows to generate images / xmls from a digital scene.
 WARNING : objects refer to unreal IDs and not labels!
+Please ensure that you have unrealCV 0.3.1+ installed
 """
 
 
 from __future__ import division, absolute_import, print_function
 import os, sys, re
 import numpy as np
-import matplotlib.image as mpimg
+from scipy import misc
 from unrealcv import client
 from pascal_voc_io import PascalVocWriter
 import argparse
 import json
-
 
 DIFFICULT = 0
 IMGSIZE = (512, 512, 3)
@@ -20,8 +20,15 @@ IMGSIZE = (512, 512, 3)
 parser = argparse.ArgumentParser(description='Generate images and xmls from Unreal Scene. The scene must be open in Unreal '
                                              'in order for this script to work')
 parser.add_argument('--trajectory', help='Camera trajectories (JSON)', default='./camera_traj.json')
-parser.add_argument('--objects', help='Objects categories (JSON). WARNING : objects must refer to unreal IDs and not labels!', default='./object_category.json')
+parser.add_argument('--objects', help='Objects categories (JSON). WARNING : objects must refer to unreal IDs and not labels!',
+                    default='./object_category.json')
+parser.add_argument('--output', help='output directory for screenshots and annotations', default='.')
 args = parser.parse_args()
+
+
+def read_png(res):
+    img = misc.imread(res)
+    return np.asarray(img)
 
 
 # TODO: replace this with a better implementation
@@ -58,6 +65,19 @@ def match_color(object_mask, target_color, tolerance=3):
         return None
 
 
+def match_color_mask(object_mask, target_color, tolerance=3):
+    match_region = np.ones(object_mask.shape[0:2], dtype=bool)
+    for c in range(3): # r,g,b
+        min_val = target_color[c] - tolerance
+        max_val = target_color[c] + tolerance
+        channel_region = (object_mask[:,:,c] >= min_val) & (object_mask[:,:,c] <= max_val)
+        match_region &= channel_region
+
+    if match_region.sum() != 0:
+        return match_region
+    else:
+        return None
+
 def get_id2color(scene_objects):
     id2color = {}  # Map from object id to the labeling color
     for obj_id in scene_objects:
@@ -84,11 +104,12 @@ if __name__=='__main__':
     res = client.request('vget /unrealcv/status')
     # The image resolution and port is configured in the config file.
     print(res)
+    print('If you want to change image screenshots dimensions, please do it manually.')
 
     camera_trajectory = json.load(open(args.trajectory))
     with open('object_category.json') as f:
         id2category = json.load(f)
-
+    print('loading config files done.')
     num_cameras = len(camera_trajectory)
     for idx in range(num_cameras):
         loc, rot = camera_trajectory[idx]
@@ -97,10 +118,15 @@ if __name__=='__main__':
         # Get image
         res = client.request('vget /camera/{id}/lit {id}.png'.format(id=idx))
         print('The image is saved to %s' % res)
+        custom_img = read_png(res)
 
         # Generate image mask
         res = client.request('vget /camera/{id}/object_mask png'.format(id=idx))
-        object_mask = mpimg.imread(res)
+        object_mask = read_png(res)
+
+        # Verify that the mask and the image have the same dimensions. This is vital to correctly compute annotations
+        if np.shape(object_mask) != np.shape(custom_img):
+            raise AssertionError
 
         # Associate images to all objects ids
         scene_objects = client.request('vget /objects').split(' ')
@@ -116,4 +142,6 @@ if __name__=='__main__':
 
         write_VOC(id2bbox, id2category, idx)
     client.disconnect()
+
     # TODO VERIFIER QUE TOUT FONCTIONNE MAINTENANT SUR QUE MARCHE PAS (imgSize)
+    # TODO comprendre pourquoi le mask et le screenshot n'ont pas meme dimension (source probleme.)
