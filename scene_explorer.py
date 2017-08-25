@@ -65,6 +65,7 @@ if __name__ == '__main__':
             it_value = int(os.path.splitext(it)[0])
             if it_value > offset:
                 offset = it_value
+    offset += 1
 
     client.connect()
     if not client.isconnected():

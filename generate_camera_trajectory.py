@@ -1,28 +1,48 @@
+import numpy as np
 
-YMIN = -4000.0
-YMAX = 4800.0
+# CONSTANTS : PLEASE ADAPT TO YOUR UE_SCENE!
+Y_MIN = -4000.0
+Y_MAX = 4800.0
 X = -700.0
 Z = 410.0
+DX = 150.0
+DZ = 50.0
+NB = 100
 
-NB = 20
 
+D_ROT = 5.0
+D_ROLL = 30.0
 
-# faire un linspace
+# Arrays definition
+x = X + 2*DX*(np.random.random(NB) - 0.5)
+y = np.linspace(start=Y_MIN, stop=Y_MAX, num=NB)
+z = Z + 2*DZ*(np.random.random(NB) - 0.5)
 
-str = '[ \n'
-x = X
-y = YMIN
-z = Z
+yaw = 2*D_ROT*(np.random.random(NB) - 0.5)
+pitch = 2*D_ROT*(np.random.random(NB) - 0.5)
+roll = 2*D_ROLL*(np.random.random(NB) - 0.5)
+
+result = '[ \n'
+
 for idx in range(NB):
-    str += '[{'
-    str += '"x":{x}, "y":{y}, "z":{y}'.format(x=x, y=y, z=z)
-    str += '},'
-    str += '{"yaw":0.0, "pitch":0.0, "roll":0.0}]'
+    result += '[{'
+    result += '"x":{x}, "y":{y}, "z":{z}'.format(x=x[idx],
+                                                 y=y[idx],
+                                                 z=z[idx])
+    result += '},'
+    result += '{'
+    result += '"yaw":{yaw}, "pitch":{pitch}, "roll":{yaw}'.format(yaw=yaw[idx],
+                                                                  pitch=pitch[idx],
+                                                                  roll=roll[idx])
+    result += '}]'
     if idx < NB-1:
-        str += ','
-    str += '\n'
+        result += ','
+    result += '\n'
+result += ']'
 
-    y += (YMAX-YMIN)/NB
-str += ']'
+print(result)
 
-print(str)
+with open("camera_trajectory.json", "w") as f:
+    f.write(result)
+
+print("camera_trajectory.json updated")
