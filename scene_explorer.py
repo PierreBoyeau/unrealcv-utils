@@ -35,13 +35,13 @@ def parse_args():
                         default='0.json')
     parser.add_argument('--images_folder',
                         help='Path to screenshots taken by UE/UnrealCV (Have same name)',
-                        default='D:/Unreal Projects/demo2/Saved/Screenshots/Windows/')
+                        default='D:/Unreal Projects/supermarket/Saved/Screenshots/Windows/')
     parser.add_argument('--output_folder',
                         help='Folder to save outputs',
                         default='output')
     parser.add_argument('--labels',
                         help="Path to labels list. Be careful that labels aren't ambiguous",
-                        default='labels.txt')
+                        default='labels_demo.txt')
     return parser.parse_args()
 
 if __name__ == '__main__':

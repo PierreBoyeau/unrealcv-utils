@@ -1,13 +1,13 @@
 import numpy as np
 
 # CONSTANTS : PLEASE ADAPT TO YOUR UE_SCENE!
-Y_MIN = -4000.0
-Y_MAX = 4800.0
-X = -700.0
-Z = 410.0
-DX = 150.0
-DZ = 50.0
-NB = 100
+Y_MIN = -1250.0
+Y_MAX = -30.0
+X = 200.0
+Z = 120.0
+DX = 50.0
+DZ = 40.0
+NB = 50
 
 
 D_ROT = 5.0
