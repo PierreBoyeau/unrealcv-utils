@@ -42,6 +42,9 @@ def parse_args():
     parser.add_argument('--labels',
                         help="Path to labels list. Be careful that labels aren't ambiguous",
                         default='labels_demo.txt')
+    parser.add_argument('--threshold',
+                        help="Threshold in number of pixels to generate or not annotations for cropped objects",
+                        default=0.0)
     return parser.parse_args()
 
 if __name__ == '__main__':
@@ -84,7 +87,7 @@ if __name__ == '__main__':
         client.request('vset /camera/{id}/location {x} {y} {z}'.format(id=idx, **loc))
         client.request('vset /camera/{id}/rotation {pitch} {yaw} {roll}'.format(id=idx, **rot))
 
-        client.request('vget /camera/bbox')
+        client.request('vget /camera/bbox {}'.format(args.threshold))
 
         # res = client.request('vget /camera/{id}/lit screen.png'.format(id=idx))
         # HighResShot rendering is way better and much more adapted to context
