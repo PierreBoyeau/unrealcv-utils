@@ -108,6 +108,9 @@ def annotate_image(image_path, bboxes_path, labels, outputFolder):
         label = find_label_from_unrealid(id, labels)
         if label is not None:
             bbox = [float(x) for x in bbox.split(',')]
+            # We need to assert that the bounding boxes stay on screen!
+            bbox = [max(0.0, x) for x in bbox]
+            bbox = [min(1.0, x) for x in bbox]
             bbox = [bbox[0]*width, bbox[1]*width, bbox[2]*height, bbox[3]*height]
             bboxes.append([label, bbox])
         else:
